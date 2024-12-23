@@ -6,8 +6,12 @@
 #include <iostream>
 #include <random>
 
+// Inicializa o tabuleiro com tamanho 10x10 e tamanho maximo 50x50
 Tabuleiro::Tabuleiro(): _dimensao(10), _dimensao_maxima(50) {}
 
+// Aloca as celulas no tabuleiro - todas mortas - a depender do estado_inicial dado pelo usuario
+// Estado inicial 1: celulas padrao, mutante e imortal
+// Demais estados: somente celulas padrao
 void Tabuleiro::construirTabuleiro(int estado_inicial){
   if(estado_inicial==1){
     // Seta quantia maxima de celulas mutantes e imortais
@@ -21,7 +25,7 @@ void Tabuleiro::construirTabuleiro(int estado_inicial){
     std::uniform_int_distribution<> dist(1, 3); 
     int random_num;
 
-    // Gera o tabuleiro com as celulas
+    // Gera o tabuleiro com as celulas padrao, mutante e imortal
     _grade = new Celula**[_dimensao];
     for(int i=0;i<_dimensao;i++){
       _grade[i] = new Celula*[_dimensao];
@@ -40,6 +44,8 @@ void Tabuleiro::construirTabuleiro(int estado_inicial){
         }
       }
     }
+
+  // Seta somente as celulas padrao
   } else if(estado_inicial >=2 || estado_inicial <= 7){
     _grade = new Celula**[_dimensao];
     for(int i=0;i<_dimensao;i++){
@@ -51,7 +57,7 @@ void Tabuleiro::construirTabuleiro(int estado_inicial){
   }
 }
 
-// Inicia a geracao 0 com estado inicial da celulas
+// Seta quais celulas do tabuleiro estaram vivas
 void Tabuleiro::setarEstadoInicial(int estado_inicial){
   construirTabuleiro(estado_inicial);
 
@@ -72,14 +78,14 @@ void Tabuleiro::setarEstadoInicial(int estado_inicial){
             _grade[i][j]->setEstado(true);
         }
     }
-    case 2:{
+    case 2:{  // Estado inicial: BLOCO
       _grade[4][4]->setEstado(true);
       _grade[4][5]->setEstado(true);
       _grade[5][4]->setEstado(true);
       _grade[5][5]->setEstado(true);
       break;
     }
-    case 3:{
+    case 3:{  // Estado inicial: BOTE
       _grade[3][3]->setEstado(true);
       _grade[3][4]->setEstado(true);
       _grade[4][3]->setEstado(true);
@@ -87,13 +93,13 @@ void Tabuleiro::setarEstadoInicial(int estado_inicial){
       _grade[5][4]->setEstado(true);
       break;
     }
-    case 4:{
+    case 4:{  // Estado inicial: PISCADOR
       _grade[4][4]->setEstado(true);
       _grade[4][5]->setEstado(true);
       _grade[4][6]->setEstado(true);
       break;
     }
-    case 5:{
+    case 5:{  // Estado inicial: SAPO
       _grade[4][5]->setEstado(true);
       _grade[4][6]->setEstado(true);
       _grade[4][7]->setEstado(true);
@@ -102,7 +108,7 @@ void Tabuleiro::setarEstadoInicial(int estado_inicial){
       _grade[5][6]->setEstado(true);
       break;
     }
-    case 6:{
+    case 6:{  // Estado inicial: PLANADOR
       _grade[3][3]->setEstado(true);
       _grade[3][4]->setEstado(true);
       _grade[3][5]->setEstado(true);
@@ -110,7 +116,7 @@ void Tabuleiro::setarEstadoInicial(int estado_inicial){
       _grade[5][4]->setEstado(true);
       break;
     }
-    case 7:{
+    case 7:{  // Estado inicial: ESPACONAVE PESO-LEVE
       _grade[3][3]->setEstado(true);
       _grade[3][6]->setEstado(true);
       _grade[4][2]->setEstado(true);
@@ -125,16 +131,16 @@ void Tabuleiro::setarEstadoInicial(int estado_inicial){
   }
 }
 
-
-
 int Tabuleiro::getDimensao(){
   return _dimensao;
 }
 
+// Retorna true se a celula no index do parametro esta viva, e false se esta morta
 bool Tabuleiro::getEstadoCelula(int linha, int coluna){
   return _grade[linha][coluna]->getEstado();
 }
 
+// Desaloca o tabuleiro construido dinamicamente
 Tabuleiro::~Tabuleiro(){
   for(int i=0;i<_dimensao;i++){
     for(int j=0;j<_dimensao;j++){
@@ -145,6 +151,7 @@ Tabuleiro::~Tabuleiro(){
   delete[] _grade;
 }
 
+// Seta os estados de uma rodada seguinte de cada celula e efetiva esses estados
 void Tabuleiro::avancarUmaRodada(){
   // Seta o estado das celulas na proxima geracao com base no numero de vizinhos
   for(int i=0;i<_dimensao;i++)
@@ -154,9 +161,13 @@ void Tabuleiro::avancarUmaRodada(){
     }
   
   // Verifica se sera necessario aumento da grade
-  if(deveAumentarDimensaoDaGrade()){
-    aumentarTabuleiro();
-    setarProximoEstadoDasNovasCelulas();
+  try {
+    if(deveAumentarDimensaoDaGrade()){
+      aumentarTabuleiro();
+      setarProximoEstadoDasNovasCelulas();
+    }
+  } catch (std::length_error &erro) {
+    throw;
   }
   
   // Efetiva o estado das celulas gerados no loop anterior
@@ -168,7 +179,7 @@ void Tabuleiro::avancarUmaRodada(){
 // Verifica existencia de 3 celulas ou mais seguidas nas bordas, se sim, retorna true
 bool Tabuleiro::deveAumentarDimensaoDaGrade(){
   if(_dimensao == _dimensao_maxima)
-    return false;
+    throw std::length_error("Limites excedidos.\n");
 
   int linha, coluna;
   int numero_celulas_vivas_seguidas = 0;
@@ -220,9 +231,11 @@ bool Tabuleiro::deveAumentarDimensaoDaGrade(){
   return false;
 }
 
+// Aumenta o tabuleiro dinamicante, sendo +4 pixels de aumento na dimensao da grade
 void Tabuleiro::aumentarTabuleiro(){
-  int nova_dimensao = _dimensao+4;
+  int nova_dimensao = _dimensao+4;  // Aumenta mais 4 pixels na dimensao da grade
   
+  // Cria uma nova_grade auxiliar para alocar as antigas celulas no novo tabuleiro de maior tamanho
   Celula*** nova_grade = new Celula**[nova_dimensao];
   for(int i=0;i<nova_dimensao;i++){
     nova_grade[i] = new Celula*[nova_dimensao];
@@ -230,7 +243,7 @@ void Tabuleiro::aumentarTabuleiro(){
       if(i > 1 && j > 1 && i < _dimensao+2 && j < _dimensao+2){   // Sai do limite das borda que foi adicionada
         nova_grade[i][j] = _grade[i-2][j-2];
         nova_grade[i][j]->setNovasCoordenadas(i,j);
-      } else {
+      } else {    // Gera as novas celulas nas bordas aumentadas do tabuleiro, todas do tipo celula padrao
         nova_grade[i][j] = new CelulaPadrao(i,j,1);
       }
     }
@@ -248,6 +261,7 @@ void Tabuleiro::aumentarTabuleiro(){
   _dimensao = nova_dimensao;
 }
 
+// Seta se as novas celulas geradas no aumento do tabuleiro estarao vivas ou mortas na proxima geracao
 void Tabuleiro::setarProximoEstadoDasNovasCelulas(){
   int numero_de_vizinhos = 0;
   
@@ -280,6 +294,8 @@ void Tabuleiro::setarProximoEstadoDasNovasCelulas(){
     }
 }
 
+// Retorna o numero de vizinhos da celula de index dos parametros passados na funcao
+// Foi feito utilizando esse inumeros casos de if para tornar a execucao mais otimizada e nao entrar em grandes loops desnecessariamente
 int Tabuleiro::getNumeroDeVizinhosDaCelula(int linha, int coluna){
   int numero_de_vizinhos = 0;
 
@@ -291,41 +307,41 @@ int Tabuleiro::getNumeroDeVizinhosDaCelula(int linha, int coluna){
         if(_grade[i][j]->getEstado())
           numero_de_vizinhos++;
       }
-  } else if (linha == 0 && coluna == 0){
+  } else if (linha == 0 && coluna == 0){    // Celula do canto superior esquerdo
     _grade[0][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[1][0]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[1][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (linha == 0 && coluna == _dimensao-1) {
+  } else if (linha == 0 && coluna == _dimensao-1) {   // Celula do canto superior direito
     _grade[0][_dimensao-2]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[1][_dimensao-2]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[1][_dimensao-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (linha == _dimensao-1 && coluna == 0){
+  } else if (linha == _dimensao-1 && coluna == 0){    // Celula do canto inferior esquerdo
     _grade[_dimensao-2][0]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[_dimensao-2][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[_dimensao-1][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (linha == _dimensao-1 && coluna == _dimensao-1){
+  } else if (linha == _dimensao-1 && coluna == _dimensao-1){    // Celula do canto inferior direito
     _grade[_dimensao-2][_dimensao-2]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[_dimensao-2][_dimensao-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[_dimensao-1][_dimensao-2]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (linha == 0) {
+  } else if (linha == 0) {    // Celulas da primeira linha (excecao da primeira e da ultima coluna)
     _grade[0][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[0][coluna+1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[1][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[1][coluna]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[1][coluna+1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (coluna == 0) {
+  } else if (coluna == 0) {   // Celulas da primeira coluna (excecao da primeira e da ultima linha)
     _grade[linha-1][0]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[linha+1][0]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[linha-1][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[linha][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[linha+1][1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (linha == _dimensao-1){
+  } else if (linha == _dimensao-1){   // Celulas da ultima linha (excecao da primeira e da ultima coluna)
     _grade[linha-1][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[linha-1][coluna]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[linha-1][coluna+1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[linha][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[linha][coluna+1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
-  } else if (coluna == _dimensao-1){
+  } else if (coluna == _dimensao-1){    // Celulas da ultima coluna (excecao da primeira e da ultima linha)
     _grade[linha-1][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos; 
     _grade[linha][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
     _grade[linha+1][coluna-1]->getEstado() ? numero_de_vizinhos++ : numero_de_vizinhos;
