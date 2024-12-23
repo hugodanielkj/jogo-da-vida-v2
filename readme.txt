@@ -1,4 +1,4 @@
-===============| JOGO DA VIDA - DOCUMENTAÇÃO |===============
+JOGO DA VIDA - DOCUMENTAÇÃO
 
 Introdução:
 O trabalho foi desenvolvido a fim de aplicar os conhecimentos adquiridos na disciplina Programação 2 - Programação Orientada á Objetos. Dessa forma, foi feito uma réplica personalizada do Jogo da Vida de um autômato celular, desenvolvido pelo matemático britânico John Horton Conway.
