@@ -12,7 +12,7 @@ Tabuleiro::Tabuleiro(): _dimensao(10), _dimensao_maxima(50) {}
 // Aloca as celulas no tabuleiro - todas mortas - a depender do estado_inicial dado pelo usuario
 // Estado inicial 1: celulas padrao, mutante e imortal
 // Demais estados: somente celulas padrao
-void Tabuleiro::construirTabuleiro(int estado_inicial){
+bool Tabuleiro::construirTabuleiro(int estado_inicial){
   if(estado_inicial==1){
     // Seta quantia maxima de celulas mutantes e imortais
     int numero_max_celulas_mutante = 25;
@@ -44,9 +44,10 @@ void Tabuleiro::construirTabuleiro(int estado_inicial){
         }
       }
     }
+    return true;
 
   // Seta somente as celulas padrao
-  } else if(estado_inicial >=2 || estado_inicial <= 7){
+  } else if(estado_inicial >=2 && estado_inicial <= 7){
     _grade = new Celula**[_dimensao];
     for(int i=0;i<_dimensao;i++){
       _grade[i] = new Celula*[_dimensao];
@@ -54,12 +55,18 @@ void Tabuleiro::construirTabuleiro(int estado_inicial){
         _grade[i][j] = new CelulaPadrao(i,j,1);
       }
     }
+    return true;
   }
+
+  return false;
 }
 
 // Seta quais celulas do tabuleiro estaram vivas
 void Tabuleiro::setarEstadoInicial(int estado_inicial){
-  construirTabuleiro(estado_inicial);
+  if(!construirTabuleiro(estado_inicial)){
+    std::cout << "Encerrando tabuleiro...\n";
+    exit(1);
+  }
 
   switch(estado_inicial){
     case 1:{

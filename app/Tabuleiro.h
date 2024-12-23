@@ -21,7 +21,7 @@ class Tabuleiro {
     // Funcoes publicas
     Tabuleiro();    // Aloca celulas na grade e inicia dimensao = 10
     void setarEstadoInicial(int estado_inicial);   // Seta quais celulas estaram vivas na geracao 0
-    void construirTabuleiro(int estado_inicial);
+    bool construirTabuleiro(int estado_inicial);
     void avancarUmaRodada();
     int getDimensao();
     bool getEstadoCelula(int linha, int coluna);
